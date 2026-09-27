@@ -9,9 +9,18 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:migrate": "dotenv -e .env.migrate -- prisma migrate dev",
+    "db:migrate:deploy": "dotenv -e .env.migrate -- prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "^6.0.0",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
@@ -20,13 +29,17 @@
   },
   "devDependencies": {
     "@eslint/js": "latest",
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "latest",
     "@types/express": "latest",
     "@types/node": "latest",
     "@types/supertest": "latest",
+    "dotenv-cli": "^11.0.0",
     "eslint": "latest",
     "globals": "latest",
+    "prisma": "^6.19.3",
     "supertest": "latest",
+    "tsx": "^4.23.15",
     "typescript": "latest",
     "typescript-eslint": "latest",
     "vitest": "latest"
