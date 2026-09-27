@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Builds and reports
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local uploads (keep only placeholders)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+.cache/
+tmp/
+temp/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini

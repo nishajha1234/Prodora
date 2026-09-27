@@ -1,0 +1,7 @@
+node_modules
+.next
+dist
+coverage
+package-lock.json
+backend/uploads
+frontend/next-env.d.ts
