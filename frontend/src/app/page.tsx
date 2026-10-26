@@ -17,9 +17,23 @@ export default function Home() {
           >
             PRODORA
           </a>
-          <span className="rounded-full border border-primary-border bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-            Foundation phase
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden rounded-full border border-primary-border bg-primary-soft px-3 py-1 text-xs font-semibold text-primary sm:inline-block">
+              Foundation phase
+            </span>
+            <a
+              className="text-sm font-semibold text-secondary transition hover:text-primary"
+              href="/login"
+            >
+              Sign in
+            </a>
+            <a
+              className="rounded-lg bg-primary px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+              href="/register"
+            >
+              Create account
+            </a>
+          </div>
         </div>
       </header>
 

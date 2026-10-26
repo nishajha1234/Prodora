@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
 import { prisma } from '../src/config/db.js';
+import { normalizeEmail } from '../src/utils/email.js';
 
 const BCRYPT_COST = 12;
 const MIN_PASSWORD_LENGTH = 12;
@@ -20,18 +22,40 @@ const ADMIN_PERMISSIONS = [
   { code: 'users:manage', description: 'Create, update, and disable users.' },
 ];
 
+// Phase 3: the portal owner role. Owners only ever receive their own
+// account/session permissions — never the admin permissions above — so they
+// cannot reach admin or repairer operations.
+const OWNER_ROLE = {
+  code: 'owner',
+  name: 'Owner',
+  isSystem: true,
+};
+
+const OWNER_PERMISSIONS = [
+  { code: 'account:read', description: 'View the signed-in own account.' },
+  {
+    code: 'sessions:manage',
+    description: 'List and revoke the own active sessions.',
+  },
+];
+
 function generateRandomPassword(): string {
   return randomBytes(24).toString('base64url');
 }
 
-async function seedRoleAndPermissions() {
-  const role = await prisma.role.upsert({
-    where: { code: ADMIN_ROLE.code },
+async function seedRole(role: typeof ADMIN_ROLE) {
+  return prisma.role.upsert({
+    where: { code: role.code },
     update: {},
-    create: ADMIN_ROLE,
+    create: role,
   });
+}
 
-  for (const permission of ADMIN_PERMISSIONS) {
+async function seedPermissions(
+  role: { id: bigint },
+  permissions: typeof ADMIN_PERMISSIONS,
+) {
+  for (const permission of permissions) {
     const record = await prisma.permission.upsert({
       where: { code: permission.code },
       update: {},
@@ -46,8 +70,18 @@ async function seedRoleAndPermissions() {
       create: { roleId: role.id, permissionId: record.id },
     });
   }
+}
 
-  return role;
+async function seedRolesAndPermissions() {
+  // Upserts only: re-running the seed never creates duplicate roles,
+  // permissions, or role-permission grants.
+  const adminRole = await seedRole(ADMIN_ROLE);
+  await seedPermissions(adminRole, ADMIN_PERMISSIONS);
+
+  const ownerRole = await seedRole(OWNER_ROLE);
+  await seedPermissions(ownerRole, OWNER_PERMISSIONS);
+
+  return adminRole;
 }
 
 async function seedBootstrapAdmin(adminRoleId: bigint) {
@@ -61,12 +95,16 @@ async function seedBootstrapAdmin(adminRoleId: bigint) {
     );
   }
 
+  // Store the address normalized (same rule as registration/login) so the
+  // admin can always sign in with any casing of the same address.
+  const normalizedEmail = normalizeEmail(email);
+
   const existingAdmin = await prisma.user.findFirst({
     where: { roleId: adminRoleId },
     select: { id: true, email: true },
   });
 
-  if (existingAdmin && existingAdmin.email === email) {
+  if (existingAdmin && existingAdmin.email === normalizedEmail) {
     console.log('Bootstrap admin already exists with this email. Skipping.');
     return;
   }
@@ -97,11 +135,16 @@ async function seedBootstrapAdmin(adminRoleId: bigint) {
   if (existingAdmin) {
     await prisma.user.update({
       where: { id: existingAdmin.id },
-      data: { email, passwordHash, displayName },
+      data: { email: normalizedEmail, passwordHash, displayName },
     });
   } else {
     await prisma.user.create({
-      data: { email, passwordHash, displayName, roleId: adminRoleId },
+      data: {
+        email: normalizedEmail,
+        passwordHash,
+        displayName,
+        roleId: adminRoleId,
+      },
     });
   }
 
@@ -109,18 +152,18 @@ async function seedBootstrapAdmin(adminRoleId: bigint) {
 
   if (generated) {
     console.log(`Bootstrap admin ${verb}.`);
-    console.log(`  Email:    ${email}`);
+    console.log(`  Email:    ${normalizedEmail}`);
     console.log(`  Password: ${password}`);
     console.log(
       '  This password is shown once and is not stored anywhere in plaintext. Save it now.',
     );
   } else {
-    console.log(`Bootstrap admin ${verb} for ${email}.`);
+    console.log(`Bootstrap admin ${verb} for ${normalizedEmail}.`);
   }
 }
 
 async function main() {
-  const adminRole = await seedRoleAndPermissions();
+  const adminRole = await seedRolesAndPermissions();
   await seedBootstrapAdmin(adminRole.id);
 }
 

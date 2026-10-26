@@ -25,6 +25,7 @@
     "dotenv": "latest",
     "express": "latest",
     "helmet": "latest",
+    "jsonwebtoken": "^9.0.3",
     "zod": "latest"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "latest",
     "@types/express": "latest",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "latest",
     "@types/supertest": "latest",
     "dotenv-cli": "^11.0.0",

@@ -64,6 +64,39 @@ model User {
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
   role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  refreshTokens RefreshToken[] @relation("UserRefreshTokens")
 
   @@map("users")
+}
+
+model RefreshToken {
+  id           BigInt   @id @default(autoincrement())
+  tokenHash    String   @unique @db.Char(64)
+  sessionId    String   @db.Char(36)
+  userId       BigInt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedByTokenHash String? @db.Char(64)
+
+  user User @relation("UserRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuthEvent {
+  id           BigInt   @id @default(autoincrement())
+  actorType    String   @db.VarChar(20)
+  action       String   @db.VarChar(40)
+  targetType   String?  @db.VarChar(40)
+  targetId     String?  @db.Char(36)
+  actorIp      String?  @db.VarChar(45)
+  actorUserAgent String? @db.VarChar(500)
+  details      String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("auth_events")
 }

@@ -5,6 +5,7 @@ import { env } from './config/env.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { notFound } from './middleware/not-found.js';
 import { requestId } from './middleware/request-id.js';
+import { authRouter } from './routes/auth.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 
 export const app = express();
@@ -14,7 +15,8 @@ app.use(helmet());
 app.use(
   cors({
     origin: env.FRONTEND_URL,
-    methods: ['GET'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   }),
 );
@@ -22,6 +24,7 @@ app.use(express.json({ limit: '100kb' }));
 app.use(requestId);
 
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
 
 app.use(notFound);
 app.use(errorHandler);
